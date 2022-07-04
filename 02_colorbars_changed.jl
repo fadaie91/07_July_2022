@@ -192,7 +192,7 @@ hmbp = heatmap!(ax_bp,yb, zb, b_partial, colorrange = (-2, 0))
 contour!(ax_bp,yb, zb, b_partial; levels, color, linewidth)
 Colorbar(fig[1, 1], hmbp, label="Buoyancy", flipaxis=false)
 
-hmbf = heatmap!(ax_bf, yb, zb, b_full, colorrange = (-2, 0))
+hmbf = heatmap!(ax_bf, yb, zb, b_full)
 contour!(ax_bf,yb, zb, b_full; levels, color, linewidth)
 Colorbar(fig[2, 1], hmbf, label="Buoyancy", flipaxis=false)
 
@@ -203,7 +203,7 @@ hmvp = heatmap!(ax_vp, yv, zv, v_partial, colorrange = (-2, 0))
 contour!(ax_vp, yv, zv, v_partial; levels, color, linewidth)
 Colorbar(fig[1, 3], hmvp, label="Velocity", flipaxis=false)
 
-hmvf = heatmap!(ax_vf,yv, zv, v_full, colorrange = (-2, 0))
+hmvf = heatmap!(ax_vf,yv, zv, v_full)
 contour!(ax_vf, yv, zv, v_full; levels, color, linewidth)
 Colorbar(fig[2, 3], hmvf, label="Velocity", flipaxis=false)
 
