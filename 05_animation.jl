@@ -3,6 +3,8 @@ using Oceananigans.BoundaryConditions: fill_halo_regions!
 using Oceananigans.ImmersedBoundaries: ImmersedBoundaryGrid, GridFittedBottom, PartialCellBottom
 using Printf
 using GLMakie
+using CairoMakie
+
 using Oceananigans.ImmersedBoundaries: mask_immersed_field!
 
 
@@ -58,9 +60,9 @@ end
 
 tracer_errors  = Dict()
 
-for ib in immersed_boundaries
-    grid = ImmersedBoundaryGrid(underlying_grid, ib)
-    #grid = ImmersedBoundaryGrid(underlying_grid, PartialCellBottom(seamount_field.data))
+#for ib in immersed_boundaries
+ #   grid = ImmersedBoundaryGrid(underlying_grid, ib)
+    grid = ImmersedBoundaryGrid(underlying_grid, PartialCellBottom(seamount_field.data))
 
 
     @show grid
@@ -131,44 +133,69 @@ fill_halo_regions!(W, arch)
 
     simulation = Simulation(model; Δt=1e-3, stop_time=1)
     simulation.callbacks[:p] = Callback(progress, IterationInterval(10))
+    #simulation.callbacks[:p] = Callback(progress)
 
+    #Δb= []
 
+    #grid_full = ImmersedBoundaryGrid(underlying_grid, GridFittedBottom(seamount_field.data))
+    #ΔB= Field{Center, Center, Center}(grid_full)   
+    #set!(ΔB, (x, y, z) -> (0) ) 
+    #mask_immersed_field!(ΔB, NaN)
+    
+    #Δb = ΔB[1,:,:]
+    
+   # b_partial = b
+   # b_full    = b[2]
+    #Δb = b_full .- b_partial
+    
+    #v_partial = v[1]
+    #v_full    = v[2]
+    #Δv = v_full .- v_partial
 
     filename = "flow_over_seamount_partial"
 
-simulation.output_writers[:fields] = JLD2OutputWriter(model, model.tracers,
+    
+
+#simulation.output_writers[:fields] = JLD2OutputWriter(model, model.tracers, 
+ #                                                     schedule = TimeInterval(0.01),
+  #                                                    filename = filename * ".jld2",
+   #                                                   overwrite_existing = true)
+simulation.output_writers[:fields] = JLD2OutputWriter(model, model.tracers; 
                                                       schedule = TimeInterval(0.01),
                                                       filename = filename * ".jld2",
                                                       overwrite_existing = true)
-
+                                                      
     run!(simulation)
+    
+
+bpartial_timeseries = FieldTimeSeries(filename * ".jld2", "b");
+times = bpartial_timeseries.times
+
+
+
+
+
+  
+
+    #v_partial_timeseries = FieldTimeSeries(filename * ".jld2", "v_partial")
+    #v_full_timeseries = FieldTimeSeries(filename * ".jld2", "v_full")
+    #Δv_timeseries = FieldTimeSeries(filename * ".jld2", "Δv")
+ 
+
+
+
 
     push!(b, Array(interior(model.tracers.b, 1, :, :)))
-    push!(v, Array(interior(model.velocities.v, 1, :, :)))
-    tracer_final = sum(interior(model.tracers.b))
-    tracer_errors[ib] = ((tracer_initial - tracer_final)/tracer_initial)*100
-    @info """
+  #  push!(v, Array(interior(model.velocities.v, 1, :, :)))
+   # tracer_final = sum(interior(model.tracers.b))
+   # tracer_errors[ib] = ((tracer_initial - tracer_final)/tracer_initial)*100
+    #@info """
   
-    Error in tracer conservation is $(tracer_errors[ib]) percent.
-    """
-end
+    #Error in tracer conservation is $(tracer_errors[ib]) percent.
+    #"""
+#end
 
-Δb= []
 
-grid_full = ImmersedBoundaryGrid(underlying_grid, GridFittedBottom(seamount_field.data))
-ΔB= Field{Center, Center, Center}(grid_full)   
-#set!(ΔB, (x, y, z) -> (0) ) 
-mask_immersed_field!(ΔB, NaN)
-
-Δb = ΔB[1,:,:]
-
-b_partial = b[1]
-b_full    = b[2]
-Δb = b_full .- b_partial
-
-v_partial = v[1]
-v_full    = v[2]
-Δv = v_full .- v_partial
 
 
 
@@ -177,13 +204,14 @@ v_full    = v[2]
 fig = Figure(resolution=(1200, 1800))
 
 partial_cell_title = @sprintf("PartialCellBottom with ϵ = %.1f", minimum_fractional_Δz)
-ax_bp = Axis(fig[1, 2], title=partial_cell_title)
-ax_bf = Axis(fig[2, 2], title="GridFittedBottom")
-ax_bd = Axis(fig[3, 2], title="Difference (GridFitted - PartialCell)")
+ax_bp = Axis(fig[1, 1], title=partial_cell_title)
+#ax_bf = Axis(fig[2, 2], title="GridFittedBottom")
+#ax_bf = Axis(fig[1, 1], title="GridFittedBottom")
+#ax_bd = Axis(fig[3, 2], title="Difference (GridFitted - PartialCell)")
 
-ax_vp = Axis(fig[1, 4], title=partial_cell_title)
-ax_vf = Axis(fig[2, 4], title="GridFittedBottom")
-ax_vd = Axis(fig[3, 4], title="Difference (GridFitted - PartialCell)")
+#ax_vp = Axis(fig[1, 4], title=partial_cell_title)
+#ax_vf = Axis(fig[2, 4], title="GridFittedBottom")
+#ax_vd = Axis(fig[3, 4], title="Difference (GridFitted - PartialCell)")
 
 color = (:black, 0.5)
 linewidth = 3
@@ -192,16 +220,33 @@ levels = 15
 #grid_partial = ImmersedBoundaryGrid(underlying_grid, PartialCellBottom(seamount_field.data,minimum_fractional_Δz))
 #grid_full = ImmersedBoundaryGrid(underlying_grid, GridFittedBottom(seamount_field.data))
 
-xb, yb, zb = nodes((Center, Center, Center), underlying_grid)
-xv, yv, zv = nodes((Center, Face, Center), underlying_grid)
-
+#xb, yb, zb = nodes((Center, Center, Center), underlying_grid)
+#xv, yv, zv = nodes((Center, Face, Center), underlying_grid)
+xb, yb, zb = nodes(bpartial_timeseries)
 
  
 n = Observable(1)
 
-ω = @lift interior(underlying_grid[$n], :, :, 1)
-s = @lift interior(underlying_grid[$n], :, :, 1)
+b_partial = @lift interior(bpartial_timeseries[$n], :, :, 1)
+#s = @lift interior(underlying_grid[$n], :, :, 1)
 
+
+
+
+hmbp =heatmap!(ax_bp,yb, zb, b_partial, colorrange = (-1, 0))
+contour!(ax_bp,yb, zb, b_partial; levels=-1:0.1:0, color, linewidth)
+Colorbar(fig[1, 1], hmbp, label="Buoyancy", flipaxis=false)
+title = @lift "t = " * string(round(times[$n], digits=2))
+Label(fig[1, 1], title, textsize=24, tellwidth=false)
+frames = 1:length(times)
+
+@info "Making an animation ..."
+
+record(fig, filename * ".mp4", frames, framerate=24) do i
+    msg = string("Plotting frame ", i, " of ", frames[end])
+    print(msg * " \r")
+    n[] = i
+end
 
 hmbp = heatmap!(ax_bp,yb, zb, b_partial, colorrange = (-1, 0))
 contour!(ax_bp,yb, zb, b_partial; levels=-1:0.1:0, color, linewidth)
