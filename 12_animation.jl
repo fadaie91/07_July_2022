@@ -178,7 +178,7 @@ xb, yb, zb = nodes((Center, Center, Center), underlying_grid)
 #ax = Axis(fig[2, 1]; xlabel = "Temperature (ᵒC)", ylabel = "z")
 set_theme!(Theme(fontsize = 24))
 
-@info "Making a neat movie of vorticity and speed..."
+@info "Making an animation ..."
 
 fig = Figure(resolution=(1200, 1800))
 
