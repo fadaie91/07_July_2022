@@ -156,11 +156,6 @@ fill_halo_regions!(W, arch)
     filename = "flow_over_seamount_partial"
 
     
-
-#simulation.output_writers[:fields] = JLD2OutputWriter(model, model.tracers, 
- #                                                     schedule = TimeInterval(0.01),
-  #                                                    filename = filename * ".jld2",
-   #                                                   overwrite_existing = true)
 simulation.output_writers[:fields] = JLD2OutputWriter(model, model.tracers; 
                                                       schedule = TimeInterval(0.01),
                                                       filename = filename * ".jld2",
