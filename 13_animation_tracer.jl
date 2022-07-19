@@ -1,12 +1,10 @@
 using Oceananigans
 using Oceananigans.BoundaryConditions: fill_halo_regions!
 using Oceananigans.ImmersedBoundaries: ImmersedBoundaryGrid, GridFittedBottom, PartialCellBottom
+using Oceananigans.ImmersedBoundaries: mask_immersed_field!
 using Printf
 using GLMakie
 using CairoMakie
-
-using Oceananigans.ImmersedBoundaries: mask_immersed_field!
-
 
 arch = CPU()
 #tracer_advection = CenteredSecondOrder()
@@ -17,7 +15,6 @@ tracer_advection = WENO5()
 #tracer_advection = CenteredFourthOrder()
 #momentum_advection = UpwindBiasedFirstOrder()
 #tracer_advection = UpwindBiasedFirstOrder()
-
 #momentum_advection = UpwindBiasedThirdOrder()
 #tracer_advection = UpwindBiasedThirdOrder()
 #momentum_advection = UpwindBiasedFifthOrder()
@@ -69,10 +66,6 @@ tracer_errors  = Dict()
     @show grid
 
     
-
-
-
-
 
 ### In this example of the paper the velocities were prescribe
 ### which means that they won't evolve during the simulation
@@ -127,8 +120,6 @@ mask_immersed_field!(W)
 fill_halo_regions!(V, arch)
 fill_halo_regions!(W, arch)
 
-
-  
     set!(model, b = B,  w=W, v=V)
     tracer_initial= sum(interior(model.tracers.b))
 
@@ -184,18 +175,12 @@ levels = 15
 n = Observable(1)
 
 b_partial = @lift interior(bpartial_timeseries)[1, :, :, $n]
-#b_partial = interior(bpartial_timeseries)[1, :, :, 1]
 
 hmbp =heatmap!(ax_bp, yb, zb, b_partial, colorrange = (-1, 0))
-
 contour!(ax_bp, yb, zb, b_partial; levels=-1:0.1:0, color, linewidth)
-
-#hmbp =heatmap!(ax_bp,yb, zb, b_partial, colorrange = (-1, 0))
-
 Colorbar(fig[1, 2], hmbp, label="Buoyancy", flipaxis=false)
 
 label = @lift "t = " * string(round(times[$n], digits=3))
-#Label(fig[1, 1], label, tellwidth=false)
 
 frames = 1:length(times)
 
