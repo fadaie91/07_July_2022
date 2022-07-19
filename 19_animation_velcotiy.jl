@@ -1,12 +1,10 @@
 using Oceananigans
 using Oceananigans.BoundaryConditions: fill_halo_regions!
 using Oceananigans.ImmersedBoundaries: ImmersedBoundaryGrid, GridFittedBottom, PartialCellBottom
+using Oceananigans.ImmersedBoundaries: mask_immersed_field!
 using Printf
 using GLMakie
 using CairoMakie
-
-using Oceananigans.ImmersedBoundaries: mask_immersed_field!
-
 
 arch = CPU()
 #tracer_advection = CenteredSecondOrder()
@@ -17,7 +15,6 @@ tracer_advection = WENO5()
 #tracer_advection = CenteredFourthOrder()
 #momentum_advection = UpwindBiasedFirstOrder()
 #tracer_advection = UpwindBiasedFirstOrder()
-
 #momentum_advection = UpwindBiasedThirdOrder()
 #tracer_advection = UpwindBiasedThirdOrder()
 #momentum_advection = UpwindBiasedFifthOrder()
@@ -69,10 +66,6 @@ tracer_errors  = Dict()
     @show grid
 
     
-
-
-
-
 
 ### In this example of the paper the velocities were prescribe
 ### which means that they won't evolve during the simulation
@@ -163,7 +156,7 @@ simulation.output_writers[:fields] = JLD2OutputWriter(model, model.velocities;
                                                       overwrite_existing = true)
                                                       
     run!(simulation)
-   # model.tracers
+
 
 vpartial_timeseries = FieldTimeSeries(filename * ".jld2", "v");
 times = vpartial_timeseries.times
@@ -186,15 +179,11 @@ n = Observable(1)
 
 v_partial = @lift interior(vpartial_timeseries)[1, :, :, $n]
 
-#hmvp =heatmap!(ax_vp, yv, zv, v_partial, colorrange = (-1, 0))
 hmvp =heatmap!(ax_vp, yv, zv, v_partial)
 contour!(ax_vp, yv, zv, v_partial; levels=0:0.1:2, color, linewidth)
-#contour!(ax_vp, yv, zv, v_partial; color, linewidth)
-
 Colorbar(fig[1, 2], hmvp, label="Buoyancy", flipaxis=false)
 
 label = @lift "t = " * string(round(times[$n], digits=3))
-#Label(fig[1, 1], label, tellwidth=false)
 
 frames = 1:length(times)
 
